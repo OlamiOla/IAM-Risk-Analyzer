@@ -1,1 +1,82 @@
-# -IAM-Risk-Analyzer
+# IAM Risk Analyzer
+
+Automated detection, alerting, auditing, and (optional) remediation of high-risk IAM configurations across an AWS account.
+
+## Overview
+
+This project continuously scans IAM users, roles, and groups to identify:
+- Over-permissioned policies (wildcard/high-risk actions)
+- Unused access (via IAM Access Analyzer's unused-access findings)
+- Stale/inactive access keys
+- Historical IAM change activity, for auditing
+
+Findings trigger real-time SNS alerts with remediation guidance. Select finding types (currently: stale access keys) can be auto-remediated on a scheduled basis, gated behind an explicit `auto_remediate` flag — disabled by default.
+
+## Architecture
+
+| Module | Responsibility |
+|---|---|
+| `iam-inventory` | Scheduled scan of all IAM users, roles, groups, policies, and access keys → DynamoDB |
+| `least-privilege-analysis` | Cross-references inventory against IAM Access Analyzer + custom checks (stale keys, wildcard policies) → writes findings to DynamoDB |
+| `audit-history` | EventBridge + CloudTrail → logs historical IAM changes to DynamoDB (TTL-based retention) |
+| `alerting` | DynamoDB Streams → SNS notifications with remediation steps, filtered by severity |
+| `auto-remediation` | Scheduled scan of OPEN findings eligible for automated action (dry-run by default) |
+| `reporting` | Weekly aggregate JSON summary report → S3 |
+
+**Dependency flow:**
+## Tech Stack
+
+- **IaC**: Terraform + Terragrunt (three-file root split: `account.hcl`, `region.hcl`, `backend.hcl`, `root.hcl`)
+- **Compute**: AWS Lambda (Python 3.12)
+- **Storage**: DynamoDB (inventory, findings, audit history), S3 (reports)
+- **Detection**: IAM Access Analyzer (unused-access + custom logic)
+- **Notification**: SNS
+- **Scheduling**: EventBridge (scheduled rules + event pattern rules)
+- **CI/CD**: GitHub Actions, OIDC authentication (no long-lived credentials)
+- **Security scanning**: KICS (Docker image, digest-pinned)
+
+## Prerequisites
+
+- AWS account with the shared backend already provisioned:
+  - S3 state bucket: `dev-sec-git-repo-s3`
+  - DynamoDB lock table: `dev-terraform-lock-config`
+  - OIDC role: `github-actions-portfolio-deploy`
+- Terraform >= 1.9.5
+- Terragrunt >= 0.68.4
+
+## Deployment
+
+Plan and apply run exclusively through CI/CD (GitHub Actions) — see `.github/workflows/`:
+- `kics-scan.yml` — runs on every PR touching `modules/` or `live/`
+- `terragrunt-plan.yml` — runs on every PR
+- `terragrunt-apply.yml` — runs on merge to `main`, gated behind a required-reviewer approval on the `development` GitHub Environment
+
+Manual local deployment (not recommended outside of initial testing):
+```bash
+cd live/dev/<module-name>
+terragrunt init
+terragrunt plan
+terragrunt apply
+```
+
+## Configuration
+
+Key tunables per environment, set in each module's `live/dev/<module>/terragrunt.hcl`:
+
+| Variable | Module | Default | Notes |
+|---|---|---|---|
+| `auto_remediate` | auto-remediation | `false` | Must be explicitly set `true` to perform live remediation |
+| `minimum_alert_severity` | alerting | `MEDIUM` | `LOW` \| `MEDIUM` \| `HIGH` |
+| `unused_access_threshold_days` | least-privilege-analysis | `90` | Days of inactivity before flagging |
+| `alert_email_subscribers` | alerting | `[]` | Set per environment; not hardcoded in module |
+
+## Security Notes
+
+- All IAM policies written as heredoc JSON (not `jsonencode()`) to avoid KICS false positives.
+- Every Lambda IAM role is scoped to only the specific resources it touches — no wildcard resource ARNs on write actions.
+- `auto-remediation` is limited to reversible, low-risk actions only (disabling stale access keys); no automated deletes.
+- KICS suppressions, if any, are documented with rationale in `.kics/SUPPRESSIONS.md`.
+
+## Author
+
+Ola ([@OlamiOla](https://github.com/OlamiOla))

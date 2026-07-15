@@ -1,0 +1,99 @@
+# Runs KICS (Keeping Infrastructure as Code Secure) against every Terraform
+# module in this repo. The KICS scan runs via a Docker-pinned image rather
+# than the checkmarx/kics-github-action marketplace action, after that
+# action was found to be supply-chain compromised (March and April 2026).
+#
+# NOTE: replace <VERIFY_AND_PIN_DIGEST> below with the sha256 digest of the
+# checkmarx/kics image tag you've independently verified, e.g.:
+#   docker pull checkmarx/kics:v2.1.9
+#   docker inspect --format='{{index .RepoDigests 0}}' checkmarx/kics:v2.1.9
+# Never scan with a bare/unverified tag in CI.
+
+name: KICS Security Scan
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+  workflow_call: 
+    inputs:
+      scan-path:
+        description: 'Path to scan with KICS'
+        required: false
+        type: string
+        default: '.'
+
+concurrency:
+  group: kics-scan-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  security-events: write
+  pull-requests: write
+
+jobs:
+  kics:
+    name: KICS Scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Run KICS scan (Docker-pinned image)
+        run: |
+          mkdir -p kics-results
+          docker run --rm \
+            -v "${{ github.workspace }}:/path:ro" \
+            -v "${{ github.workspace }}/kics-results:/output" \
+            checkmarx/kics:v2.1.9@sha256:d28b657224d2a80b1a8b4d26b383a8449e62572651ada6208984abbe1f934b60 \
+            scan \
+            -p /path \
+            -o /output \
+            --report-formats sarif,json \
+            --exclude-paths /path/.git,/path/.github || true
+
+      - name: Upload full KICS results as an artifact
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: kics-results
+          path: kics-results/
+          retention-days: 30
+
+      - name: Fail the build on MEDIUM, HIGH or CRITICAL findings
+        run: |
+          python3 - <<'PYEOF'
+          import json
+          import sys
+          import os
+
+          if not os.path.exists("kics-results/results.json"):
+              print("No KICS results file found - scan may have failed or produced no output")
+              sys.exit(0)
+
+          with open("kics-results/results.json") as f:
+              data = json.load(f)
+
+          counts = {"CRITICAL": 0, "HIGH": 0, "MEDIUM": 0}
+          for query in data.get("queries", []):
+              severity = query.get("severity", "").upper()
+              if severity in counts:
+                  counts[severity] += len(query.get("files", []))
+
+          print(f"CRITICAL findings: {counts['CRITICAL']}")
+          print(f"HIGH findings:     {counts['HIGH']}")
+          print(f"MEDIUM findings:   {counts['MEDIUM']}")
+
+          if sum(counts.values()) > 0:
+              print("Failing build: unresolved MEDIUM/HIGH/CRITICAL findings. "
+                    "Fix them or document a justified suppression in "
+                    ".kics/config.yml + .kics/SUPPRESSIONS.md.")
+              sys.exit(1)
+          PYEOF

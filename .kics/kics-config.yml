@@ -1,0 +1,6 @@
+exclude-severities:
+  - info
+exclude-paths:
+  - "**/.terragrunt-cache/**"
+  - "**/lambda/*.zip"
+disable-secrets: false
