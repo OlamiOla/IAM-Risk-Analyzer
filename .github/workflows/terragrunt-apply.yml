@@ -81,7 +81,7 @@ jobs:
         id: plan
         run: |
           set -o pipefail
-          run: terragrunt run --all --non-interactive --parallelism 1 -- plan -lock=false 2>&1 | tee plan_output.txt
+          terragrunt run --all --non-interactive --parallelism 1 -- plan -lock=false 2>&1 | tee plan_output.txt
 
 
       - name: Terragrunt Apply
