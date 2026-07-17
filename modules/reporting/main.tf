@@ -77,6 +77,13 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "reports_access_lo
   }
 }
 
+resource "aws_s3_bucket_versioning" "reports_access_logs" {
+  bucket = aws_s3_bucket.reports_access_logs.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
 resource "aws_s3_bucket_logging" "reports" {
   bucket        = aws_s3_bucket.reports.id
   target_bucket = aws_s3_bucket.reports_access_logs.id

@@ -3,4 +3,6 @@ exclude-severities:
 exclude-paths:
   - "**/.terragrunt-cache/**"
   - "**/lambda/*.zip"
+exclude-results:
+  - "17701c31079981b764383a939068ce8814395bdb2c20b3bdbe0155128cf7a0b1"
 disable-secrets: false

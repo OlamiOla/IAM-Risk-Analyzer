@@ -8,12 +8,27 @@ resource "aws_kms_key" "project_cmk" {
   "Version": "2012-10-17",
   "Statement": [
     {
-      "Sid": "EnableRootAccountPermissions",
+      "Sid": "EnableRootAccountAdmin",
       "Effect": "Allow",
       "Principal": {
         "AWS": "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
       },
-      "Action": "kms:*",
+      "Action": [
+        "kms:Create*",
+        "kms:Describe*",
+        "kms:Enable*",
+        "kms:List*",
+        "kms:Put*",
+        "kms:Update*",
+        "kms:Revoke*",
+        "kms:Disable*",
+        "kms:Get*",
+        "kms:Delete*",
+        "kms:TagResource",
+        "kms:UntagResource",
+        "kms:ScheduleKeyDeletion",
+        "kms:CancelKeyDeletion"
+      ],
       "Resource": "*"
     },
     {
