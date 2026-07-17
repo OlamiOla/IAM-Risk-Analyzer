@@ -5,7 +5,7 @@ data "aws_caller_identity" "current" {}
 # ---------------------------------------------------------------------------
 resource "aws_sns_topic" "risk_alerts" {
   name              = "${var.project_name}-risk-alerts"
-  kms_master_key_id = "alias/aws/sns"
+  kms_master_key_id = var.kms_key_arn
 
   tags = var.tags
 }
@@ -123,6 +123,7 @@ resource "aws_iam_role_policy_attachment" "lambda_alerting" {
 resource "aws_cloudwatch_log_group" "lambda_logs" {
   name              = "/aws/lambda/${var.project_name}-send-alert"
   retention_in_days = var.log_retention_days
+  kms_key_id        = var.kms_key_arn
   tags              = var.tags
 }
 

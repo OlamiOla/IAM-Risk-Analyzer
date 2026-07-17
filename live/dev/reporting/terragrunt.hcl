@@ -36,6 +36,15 @@ dependency "audit_history" {
   mock_outputs_allowed_terraform_commands = ["validate", "plan", "init"]
 }
 
+dependency "shared_kms" {
+  config_path = "../shared-kms"
+
+  mock_outputs = {
+    kms_key_arn = "arn:aws:kms:us-east-1:000000000000:key/mock-key-id"
+  }
+  mock_outputs_allowed_terraform_commands = ["validate", "plan", "init"]
+}
+
 inputs = {
   inventory_table_name      = dependency.iam_inventory.outputs.inventory_table_name
   inventory_table_arn       = dependency.iam_inventory.outputs.inventory_table_arn
@@ -43,6 +52,7 @@ inputs = {
   findings_table_arn        = dependency.least_privilege_analysis.outputs.findings_table_arn
   audit_history_table_name  = dependency.audit_history.outputs.audit_history_table_name
   audit_history_table_arn   = dependency.audit_history.outputs.audit_history_table_arn
+  kms_key_arn               = dependency.shared_kms.outputs.kms_key_arn
   report_retention_days     = 365
   schedule_expression       = "rate(7 days)"
 }

@@ -54,6 +54,35 @@ resource "aws_s3_bucket_lifecycle_configuration" "reports" {
   }
 }
 
+resource "aws_s3_bucket" "reports_access_logs" {
+  bucket = "${var.project_name}-reports-access-logs-${data.aws_caller_identity.current.account_id}"
+  tags   = var.tags
+}
+
+resource "aws_s3_bucket_public_access_block" "reports_access_logs" {
+  bucket                  = aws_s3_bucket.reports_access_logs.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "reports_access_logs" {
+  bucket = aws_s3_bucket.reports_access_logs.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
+}
+
+resource "aws_s3_bucket_logging" "reports" {
+  bucket        = aws_s3_bucket.reports.id
+  target_bucket = aws_s3_bucket.reports_access_logs.id
+  target_prefix = "reports-access-logs/"
+}
+
 # ---------------------------------------------------------------------------
 # Lambda packaging
 # ---------------------------------------------------------------------------
@@ -155,6 +184,7 @@ resource "aws_iam_role_policy_attachment" "lambda_reporting" {
 resource "aws_cloudwatch_log_group" "lambda_logs" {
   name              = "/aws/lambda/${var.project_name}-generate-report"
   retention_in_days = var.log_retention_days
+  kms_key_id        = var.kms_key_arn
   tags              = var.tags
 }
 

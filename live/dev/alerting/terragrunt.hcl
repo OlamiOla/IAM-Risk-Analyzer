@@ -15,8 +15,18 @@ dependency "least_privilege_analysis" {
   mock_outputs_allowed_terraform_commands = ["validate", "plan", "init"]
 }
 
+dependency "shared_kms" {
+  config_path = "../shared-kms"
+
+  mock_outputs = {
+    kms_key_arn = "arn:aws:kms:us-east-1:000000000000:key/mock-key-id"
+  }
+  mock_outputs_allowed_terraform_commands = ["validate", "plan", "init"]
+}
+
 inputs = {
   findings_table_stream_arn = dependency.least_privilege_analysis.outputs.findings_table_stream_arn
+  kms_key_arn               = dependency.shared_kms.outputs.kms_key_arn
   alert_email_subscribers   = []
   minimum_alert_severity    = "MEDIUM"
 }

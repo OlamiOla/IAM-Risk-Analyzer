@@ -6,7 +6,17 @@ terraform {
   source = "${get_repo_root()}//modules/audit-history"
 }
 
+dependency "shared_kms" {
+  config_path = "../shared-kms"
+
+  mock_outputs = {
+    kms_key_arn = "arn:aws:kms:us-east-1:000000000000:key/mock-key-id"
+  }
+  mock_outputs_allowed_terraform_commands = ["validate", "plan", "init"]
+}
+
 inputs = {
-  audit_history_retention_days = 365
-  log_retention_days           = 90
+  kms_key_arn                   = dependency.shared_kms.outputs.kms_key_arn
+  audit_history_retention_days  = 365
+  log_retention_days            = 90
 }

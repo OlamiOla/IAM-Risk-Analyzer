@@ -114,6 +114,7 @@ resource "aws_iam_role_policy_attachment" "lambda_audit_history" {
 resource "aws_cloudwatch_log_group" "lambda_logs" {
   name              = "/aws/lambda/${var.project_name}-log-iam-changes"
   retention_in_days = var.log_retention_days
+  kms_key_id        = var.kms_key_arn
   tags              = var.tags
 }
 

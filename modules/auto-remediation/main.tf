@@ -94,6 +94,7 @@ resource "aws_iam_role_policy_attachment" "lambda_remediation" {
 resource "aws_cloudwatch_log_group" "lambda_logs" {
   name              = "/aws/lambda/${var.project_name}-remediate-credentials"
   retention_in_days = var.log_retention_days
+  kms_key_id        = var.kms_key_arn
   tags              = var.tags
 }
 

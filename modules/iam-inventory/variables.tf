@@ -54,3 +54,8 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "kms_key_arn" {
+  description = "ARN of the shared CMK for CloudWatch Logs encryption"
+  type        = string
+}

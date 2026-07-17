@@ -25,11 +25,21 @@ dependency "alerting" {
   mock_outputs_allowed_terraform_commands = ["validate", "plan", "init"]
 }
 
+dependency "shared_kms" {
+  config_path = "../shared-kms"
+
+  mock_outputs = {
+    kms_key_arn = "arn:aws:kms:us-east-1:000000000000:key/mock-key-id"
+  }
+  mock_outputs_allowed_terraform_commands = ["validate", "plan", "init"]
+}
+
 inputs = {
-  findings_table_name     = dependency.least_privilege_analysis.outputs.findings_table_name
-  findings_table_arn      = dependency.least_privilege_analysis.outputs.findings_table_arn
-  sns_topic_arn           = dependency.alerting.outputs.sns_topic_arn
-  auto_remediate          = false
+  findings_table_name      = dependency.least_privilege_analysis.outputs.findings_table_name
+  findings_table_arn       = dependency.least_privilege_analysis.outputs.findings_table_arn
+  sns_topic_arn            = dependency.alerting.outputs.sns_topic_arn
+  kms_key_arn              = dependency.shared_kms.outputs.kms_key_arn
+  auto_remediate           = false
   remediable_finding_types = ["stale_access_key"]
-  schedule_expression     = "rate(1 day)"
+  schedule_expression      = "rate(1 day)"
 }
