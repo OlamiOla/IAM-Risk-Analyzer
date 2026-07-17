@@ -1,1 +1,1 @@
-# -IAM-Risk-Analyzer
+# IAM-Risk-Analyzer
