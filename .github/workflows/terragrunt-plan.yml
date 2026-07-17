@@ -15,8 +15,8 @@ permissions:
   pull-requests: write
 
 concurrency:
-  group: terragrunt-plan-dev
-  cancel-in-progress: false
+  group: tg-apply-${{ github.ref }}
+  cancel-in-progress: false 
 
 env:
   AWS_REGION: us-east-1
@@ -66,14 +66,14 @@ jobs:
 
       - name: Terragrunt Init
         id: init
-        run: terragrunt run --all init --terragrunt-non-interactive --terragrunt-parallelism 1
+        run: terragrunt run --all --non-interactive --parallelism 1 -- init
         continue-on-error: false
 
       - name: Terragrunt Plan
         id: plan
-        run: |git
+        run: |
           set -o pipefail
-          terragrunt run --all plan -lock=false --terragrunt-non-interactive --terragrunt-parallelism 1 2>&1 | tee plan_output.txt
+          terragrunt run --all --non-interactive --parallelism 1 -- plan -lock=false 2>&1 | tee plan_output.txt
 
       - name: Upload plan output
         if: always()
