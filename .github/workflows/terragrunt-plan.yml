@@ -66,7 +66,7 @@ jobs:
 
       - name: Terragrunt Init
         id: init
-        run: terragrunt run-ll init --non-interactive --parallelism 1
+        run: terragrunt run-all init --non-interactive --parallelism 1
         continue-on-error: false
 
       - name: Terragrunt Plan
