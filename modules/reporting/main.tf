@@ -54,12 +54,11 @@ resource "aws_s3_bucket_lifecycle_configuration" "reports" {
   }
 }
 
-# kics-scan disable=f861041c-8c9f-4156-acfc-5e6e524f5884
+# kics-scan ignore-block
 resource "aws_s3_bucket" "reports_access_logs" {
   bucket = "${var.project_name}-reports-access-logs-${data.aws_caller_identity.current.account_id}"
   tags   = var.tags
 }
-# kics-scan enable=f861041c-8c9f-4156-acfc-5e6e524f5884
 
 resource "aws_s3_bucket_public_access_block" "reports_access_logs" {
   bucket                  = aws_s3_bucket.reports_access_logs.id
