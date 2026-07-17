@@ -73,21 +73,21 @@ jobs:
 
       - name: Terragrunt Init
         id: init
-        run: terragrunt run --all init --non-interactive --parallelism 1
+        run: terragrunt run-all init --non-interactive --parallelism 1
         continue-on-error: false
 
 
       - name: Terragrunt Plan
         id: plan
-        run: terragrunt run --all plan --non-interactive --parallelism 1 -- -lock=false 2>&1 | tee plan_output.txt
+        run: terragrunt run-all plan --non-interactive --parallelism 1 -- -lock=false 2>&1 | tee plan_output.txt
 
       - name: Terragrunt Apply
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
-        run: terragrunt run --all apply --non-interactive --parallelism 1 -- -auto-approve
+        run: terragrunt run-all apply --non-interactive --parallelism 1 -- -auto-approve
 
       - name: Get Outputs
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
-        run: terragrunt run --all output --non-interactive --parallelism 1 2>&1 | tee outputs.txt
+        run: terragrunt run-all output --non-interactive --parallelism 1 2>&1 | tee outputs.txt
 
       - name: Upload Outputs
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'

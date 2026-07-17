@@ -66,14 +66,14 @@ jobs:
 
       - name: Terragrunt Init
         id: init
-        run: terragrunt run --all init --non-interactive --parallelism 1
+        run: terragrunt run-ll init --non-interactive --parallelism 1
         continue-on-error: false
 
       - name: Terragrunt Plan
         id: plan
         run: |
           set -o pipefail
-          terragrunt run --all plan -lock=false --non-interactive --parallelism 1 2>&1 | tee plan_output.txt
+          terragrunt run-all plan -lock=false --non-interactive --parallelism 1 2>&1 | tee plan_output.txt
 
       - name: Upload plan output
         if: always()
