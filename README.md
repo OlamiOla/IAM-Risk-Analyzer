@@ -59,6 +59,25 @@ terragrunt plan
 terragrunt apply
 ```
 
+
+## Troubleshooting
+
+**`terragrunt run --all ... -- <command>` fails with "flag not defined" or "Terraform has no command named run"**
+
+This project pins Terragrunt `0.68.4`, which predates the CLI redesign introduced in 0.77+/1.x. The two syntaxes are not interchangeable:
+
+| Terragrunt version | Command form | Flag form |
+|---|---|---|
+| `< 0.77` (this project) | `terragrunt run-all <command>` | `--terragrunt-non-interactive`, `--terragrunt-parallelism N` |
+| `>= 1.0` | `terragrunt run --all --non-interactive --parallelism N -- <command>` | flags before `--`, unprefixed |
+
+If you see either error above, check that `TERRAGRUNT_VERSION` in the workflow env matches the command syntax actually used in that same workflow file — a version bump without a matching syntax update (or vice versa) is the most common cause. The `terragrunt --version` line in the "Setup Terragrunt" step prints what's actually installed in the CI log, which is the fastest way to confirm which syntax applies.
+
+**`terragrunt plan`/`init` fails with "detected no outputs" on a `dependency` block**
+
+This happens when a downstream module's `dependency` block doesn't include the command being run in `mock_outputs_allowed_terraform_commands`. Mocked outputs are only accepted for the commands explicitly listed there — `init` must be included alongside `validate`/`plan`, or `terragrunt run-all init` will fail on any module with a not-yet-applied dependency.
+
+
 ## Configuration
 
 Key tunables per environment, set in each module's `live/dev/<module>/terragrunt.hcl`:
@@ -80,3 +99,4 @@ Key tunables per environment, set in each module's `live/dev/<module>/terragrunt
 ## Author
 
 Ola ([@OlamiOla](https://github.com/OlamiOla))
+
