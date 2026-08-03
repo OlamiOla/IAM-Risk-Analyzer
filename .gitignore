@@ -33,3 +33,7 @@ venv/
 .env
 *.tfvars
 !*.tfvars.example
+
+# Local IAM policy scratch files (contain account ID / ARNs)
+trust-policy.json
+deploy-policy.json

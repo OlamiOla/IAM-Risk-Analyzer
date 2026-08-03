@@ -77,6 +77,17 @@ If you see either error above, check that `TERRAGRUNT_VERSION` in the workflow e
 
 This happens when a downstream module's `dependency` block doesn't include the command being run in `mock_outputs_allowed_terraform_commands`. Mocked outputs are only accepted for the commands explicitly listed there — `init` must be included alongside `validate`/`plan`, or `terragrunt run-all init` will fail on any module with a not-yet-applied dependency.
 
+### Branch-scoped CI triggers
+
+`terragrunt-plan.yml` runs on push to `riskanalyzer` (the active feature branch) and on PRs into `main`, giving fast plan feedback while iterating pre-merge. `terragrunt-apply.yml` only ever triggers on push to `main` — feature branch pushes never reach apply, regardless of what the OIDC trust policy allows.
+
+The `github-actions-portfolio-deploy` role's trust policy (`sts:AssumeRoleWithWebIdentity` condition) must list every branch that `plan.yml` runs against, or CI fails with `Not authorized to perform sts:AssumeRoleWithWebIdentity`. Currently allowed `sub` patterns:
+- `repo:OlamiOla/IAM-Risk-Analyzer:ref:refs/heads/main`
+- `repo:OlamiOla/IAM-Risk-Analyzer:ref:refs/heads/riskanalyzer`
+- `repo:OlamiOla/IAM-Risk-Analyzer:pull_request`
+
+**Remove the `riskanalyzer` entry** (both from the trust policy and from `plan.yml`'s `on: push: branches:`) once that branch is merged into `main` and no longer in active use — stale branch trust left on an IAM role is unnecessary drift.
+
 
 ## Configuration
 

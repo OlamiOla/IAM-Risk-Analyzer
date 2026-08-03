@@ -14,6 +14,7 @@
         "StringLike": {
           "token.actions.githubusercontent.com:sub": [
             "repo:OlamiOla/IAM-Risk-Analyzer:ref:refs/heads/main",
+            "repo:OlamiOla/IAM-Risk-Analyzer:ref:refs/heads/riskanalyzer",
             "repo:OlamiOla/IAM-Risk-Analyzer:pull_request"
           ]
         }

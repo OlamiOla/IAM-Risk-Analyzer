@@ -3,25 +3,28 @@ name: Terragrunt Plan
 on:
   push:
     branches:
-     - main
-     - riskanalyzer
+      - riskanalyzer
+      - main
 
   pull_request:
     branches: [main]
 
+  workflow_dispatch: {}
+
 permissions:
   id-token: write
   contents: read
+  security-events: read
   pull-requests: write
+  actions: read
 
 concurrency:
   group: tg-apply-${{ github.ref }}
   cancel-in-progress: false 
 
 env:
-  AWS_REGION: us-east-1
-  TERRAFORM_VERSION: "1.9.5"
-  TERRAGRUNT_VERSION: "0.68.4"
+  TERRAFORM_VERSION: "1.15.8"
+  TERRAGRUNT_VERSION: "1.1.0"
 
 jobs:
   kics-scan:
@@ -38,8 +41,8 @@ jobs:
 
   plan:
     name: Plan (dev)
-    runs-on: ubuntu-latest
     needs: kics-scan
+    runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: live/dev
@@ -68,7 +71,6 @@ jobs:
       - name: Terragrunt Init
         id: init
         run: terragrunt run-all init --terragrunt-non-interactive --terragrunt-parallelism 1
-        continue-on-error: false
 
       - name: Terragrunt Plan
         id: plan
