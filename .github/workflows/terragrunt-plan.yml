@@ -23,8 +23,8 @@ concurrency:
   cancel-in-progress: false 
 
 env:
-  TERRAFORM_VERSION: "1.15.8"
-  TERRAGRUNT_VERSION: "1.1.0"
+  TERRAFORM_VERSION: "1.9.5"
+  TERRAGRUNT_VERSION: "0.68.4"
 
 jobs:
   kics-scan:
@@ -86,3 +86,4 @@ jobs:
           path: live/dev/plan_output.txt
           retention-days: 30
           if-no-files-found: warn
+          
