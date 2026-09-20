@@ -3,11 +3,40 @@
 # than the checkmarx/kics-github-action marketplace action, after that
 # action was found to be supply-chain compromised (March and April 2026).
 #
-# NOTE: replace <VERIFY_AND_PIN_DIGEST> below with the sha256 digest of the
-# checkmarx/kics image tag you've independently verified, e.g.:
-#   docker pull checkmarx/kics:v2.1.9
-#   docker inspect --format='{{index .RepoDigests 0}}' checkmarx/kics:v2.1.9
-# Never scan with a bare/unverified tag in CI.
+# ⚠️  SUPPLY CHAIN SECURITY WARNING — READ BEFORE UPDATING THE DIGEST BELOW ⚠️
+#
+# The checkmarx/kics Docker Hub repository was compromised TWICE in 2026:
+#
+#   • March 19, 2026 (TeamPCP / Trivy supply chain attack): Checkmarx
+#     publisher credentials were first obtained, enabling follow-on attacks.
+#
+#   • April 22, 2026 (DockerHub push, 14:17–15:41 UTC): A threat actor used
+#     those stolen Checkmarx credentials to overwrite five existing tags on
+#     Docker Hub (latest, v2.1.20, v2.1.20-debian, alpine, debian) and push
+#     two new rogue tags (v2.1.21, v2.1.21-debian). The malicious images ran
+#     the legitimate KICS scan AND silently encrypted + exfiltrated scan
+#     output (which contains secrets/credentials from IaC files) to an
+#     attacker-controlled endpoint at audit.checkmarx[.]cx.
+#
+#   • May 2026: The Checkmarx Jenkins AST plugin was separately compromised
+#     using tokens stolen during the April incident.
+#
+# The tag pinned below (v2.1.9) was NOT among the overwritten tags. However,
+# Docker tags are mutable — a digest pin is the only safe reference.
+#
+# BEFORE CHANGING THE DIGEST:
+#   1. Pull the image independently:
+#        docker pull checkmarx/kics:<TAG>
+#   2. Verify the digest matches what Checkmarx published on their official
+#      GitHub release page (https://github.com/checkmarx/kics/releases):
+#        docker inspect --format='{{index .RepoDigests 0}}' checkmarx/kics:<TAG>
+#   3. Cross-check against the known-safe digests listed in Checkmarx's
+#      official security update: https://checkmarx.com/blog/checkmarx-security-update-april-22/
+#   4. Update the digest AND the tag comment together so they stay in sync.
+#   5. Note the verification date and source in a comment next to the digest.
+#
+# Never scan with a bare/unverified tag in CI — a tag can be silently
+# repointed to a malicious digest without any change to the workflow file.
 
 name: KICS Security Scan
 
@@ -21,7 +50,7 @@ on:
     inputs:
       scan-path:
         description: 'Path to scan with KICS'
-        required: false
+        required: true
         type: string
         default: '.'
 
@@ -56,6 +85,7 @@ jobs:
             scan \
             -p /path \
             -o /output \
+            -c /path/.kics/config.yml \
             --report-formats sarif,json \
             --exclude-paths /path/.git,/path/.github || true
 

@@ -5,10 +5,10 @@
       "Sid": "TerraformStateBackend",
       "Effect": "Allow",
       "Action": [
-        "s3:GetObject",
+        "s3:Get*",
+        "s3:List*",
         "s3:PutObject",
-        "s3:DeleteObject",
-        "s3:ListBucket"
+        "s3:DeleteObject"
       ],
       "Resource": [
         "arn:aws:s3:::dev-sec-git-repo-s3",

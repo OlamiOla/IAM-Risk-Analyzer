@@ -1,3 +1,5 @@
+data "aws_caller_identity" "current" {}
+
 resource "aws_kms_key" "project_cmk" {
   description             = "${var.project_name} CMK for CloudWatch Logs and SNS encryption"
   deletion_window_in_days = 30
@@ -44,7 +46,12 @@ resource "aws_kms_key" "project_cmk" {
         "kms:GenerateDataKey*",
         "kms:DescribeKey"
       ],
-      "Resource": "*"
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+          "aws:SourceAccount": "${data.aws_caller_identity.current.account_id}"
+        }
+      }
     },
     {
       "Sid": "AllowSNSUse",
@@ -59,7 +66,12 @@ resource "aws_kms_key" "project_cmk" {
         "kms:GenerateDataKey*",
         "kms:DescribeKey"
       ],
-      "Resource": "*"
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+          "aws:SourceAccount": "${data.aws_caller_identity.current.account_id}"
+        }
+      }
     }
   ]
 }
@@ -72,5 +84,3 @@ resource "aws_kms_alias" "project_cmk" {
   name          = "alias/${var.project_name}-cmk"
   target_key_id = aws_kms_key.project_cmk.key_id
 }
-
-data "aws_caller_identity" "current" {}
