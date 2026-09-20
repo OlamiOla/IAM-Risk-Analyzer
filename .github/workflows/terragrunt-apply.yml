@@ -4,12 +4,11 @@ on:
   push:
     # Apply only ever runs on main — feature branch pushes never reach apply.
     branches:
-      - main
+      - riskanalyzer
   pull_request:
     # Plan runs on all PRs, but apply only runs on main.
      branches:
-      - riskanalyzer
-
+      - main
 
   # Allow manual trigger for emergency re-applies.
   workflow_dispatch: {}
