@@ -72,13 +72,13 @@ jobs:
 
       - name: Terragrunt Init
         id: init
-        run: terragrunt run --all init --non-interactive --parallelism 1
+        run: terragrunt run-all init -terragrunt-non-interactive -terragrunt-parallelism 1
 
       - name: Terragrunt Plan
         id: plan
         run: |
           set -o pipefail
-          terragrunt run --all plan -lock=false --non-interactive --parallelism 1 2>&1 | tee plan_output.txt
+          terragrunt run-all plan -lock=false -terragrunt-non-interactive -terragrunt-parallelism 1 2>&1 | tee plan_output.txt
 
       - name: Upload plan output
         if: always()
@@ -125,23 +125,23 @@ jobs:
 
       - name: Terragrunt Init
         id: init
-        run: terragrunt run --all init --non-interactive --parallelism 1
+        run: terragrunt run-all init -terragrunt-non-interactive -terragrunt-parallelism 1
 
       - name: Terragrunt Plan
         id: plan
         run: |
           set -o pipefail
-          terragrunt run --all plan -lock=false --non-interactive --parallelism 1 2>&1 | tee plan_output.txt
+          terragrunt run-all plan -lock=false -terragrunt-non-interactive -terragrunt-parallelism 1 2>&1 | tee plan_output.txt
 
       - name: Terragrunt Apply
         if: github.ref == 'refs/heads/main' || github.event_name == 'pull_request'
 
-        run: terragrunt run --all apply -auto-approve --non-interactive --parallelism 1
+        run: terragrunt run-all apply -auto-approve -terragrunt-non-interactive -terragrunt-parallelism 1
 
       - name: Get Outputs
         run: |
           set -o pipefail
-          terragrunt run --all output --non-interactive --parallelism 1 2>&1 | tee outputs.txt
+          terragrunt run-all output -terragrunt-non-interactive -terragrunt-parallelism 1 2>&1 | tee outputs.txt
 
       - name: Upload Outputs
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
